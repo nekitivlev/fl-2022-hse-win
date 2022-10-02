@@ -1,65 +1,91 @@
 import ply.lex as lex
 import sys
 
-# 1 + 2 * x123 + if x then 31 else 42
-
-reserved = {
-  'if': 'IF',
-  'then': 'THEN',
-  'else': 'ELSE'
-}
-
 tokens = [
-  'NUM',
-  'PLUS',
-  'MINUS',
-  'MULT',
-  'DIV',
-  'POW',
-  'ID',
-  'LBR',
-  'RBR'
-] + list(reserved.values())
+    'START',
+    'NON_TERMINAL',
+    'TERMINAL',
+    'EPS',
+    'EQUIV',
+    'NEXT_TERM',
+    'END_OF_LINE'
+]
 
-def t_ID(t):
-  r'[a-z_][a-z_0-9]*'
-  t.type = reserved.get(t.value, 'ID')
-  return t
 
-def t_NUM(t):
-  r'[0-9]+'
-  t.value = int(t.value)
-  return t
+def clean(token_val):
+    token_val = token_val.replace("\\$", "\$")
+    return token_val
 
-t_PLUS = r'\+'
-t_MINUS = r'\-'
-t_MULT = r'\*'
-t_DIV = r'\/'
-t_POW = r'\*\*'
-t_LBR = r'\('
-t_RBR = r'\)'
+
+def clean_non_term(token_val):
+    token_val = token_val.replace("\\$", "$")
+    return clean(token_val)
+
+
+def clean_term(token_val):
+    token_val = token_val.replace("\\\&", "\&")
+    return clean(token_val)
+
+def find_row(input, token):
+    line_start = input.rfind('\n', 0, token.lexpos) + 1
+    return (token.lexpos - line_start) + 1
+
+
+def t_START(t):
+    r"start\ =\ \$([^$\$]*?(\$[^$]{1})*)*\$;"
+    t.value = clean(t.value[9:-2])
+    return t
+
+
+def t_NON_TERMINAL(t):
+    r'\$[^\\$]*((\\\$)?[^\\$]*)*\$'
+    t.value = clean_non_term(t.value[1:-1])
+    return t
+
+
+def t_TERMINAL(t):
+    r'\&[^\\&]*((\\\&)?[^\\&]*)*\&'
+    t.value = clean_term(t.value[1:-1])
+    return t
+
+
+t_EQUIV = r'='
+t_EPS = r'@'
+t_NEXT_TERM = r'\|'
+t_END_OF_LINE = r';'
 
 t_ignore = ' \t'
 
+
 def t_newline(t):
-  r'\n+'
-  t.lexer.lineno += len(t.value)
+    r'\n+'
+    t.lexer.lineno += len(t.value)
+
 
 def t_error(t):
-  print("Illegal character '%s'" % t.value[0])
-  t.lexer.skip(1)
+    print(f"Unexpected character '{t.value[0]}' at line {t.lexer.lineno}")
+    t.lexer.skip(1)
 
-lexer = lex.lex()
+
+
+
 
 def main():
-  lexer = lex.lex()
-  lexer.input(sys.argv[1])
+    filename = sys.argv[1]
+    lexer = lex.lex()
+    with open(filename, "r") as filein, open(filename + ".out", "w") as fileout:
+        lexer = lex.lex()
+        lexer_input = "".join(filein.readlines())
+        lexer.input(lexer_input)
 
-  while True:
-    tok = lexer.token()
-    if not tok:
-      break
-    print(tok)
+        print(file=fileout)
+        while True:
+            tokens = lexer.token()
+            if not tokens:
+                break
+            tokens.lexpos = find_row(lexer_input, tokens)
+            print(tokens, file=fileout)
+
 
 if __name__ == "__main__":
     main()
