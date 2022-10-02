@@ -1,0 +1,11 @@
+
+LexToken(START,'S',1,1)
+LexToken(NON_TERMINAL,'S',2,1)
+LexToken(EQUIV,'=',2,4)
+LexToken(TERMINAL,'(',2,5)
+LexToken(NON_TERMINAL,'S',2,8)
+LexToken(TERMINAL,')',2,11)
+LexToken(NEXT_TERM,'|',2,14)
+LexToken(EPS,'@',2,15)
+LexToken(END_OF_LINE,';',2,16)
+
