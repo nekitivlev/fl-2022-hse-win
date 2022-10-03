@@ -3,14 +3,20 @@ import sys
 
 tokens = [
     'START',
-    'NON_TERMINAL',
-    'TERMINAL',
+    'NTERM',
+    'TERM',
     'EPS',
     'EQUIV',
     'NEXT_TERM',
     'END_OF_LINE'
 ]
 
+t_EQUIV = r'='
+t_EPS = r'@'
+t_NEXT_TERM = r'\|'
+t_END_OF_LINE = r';'
+
+t_ignore = ' \t'
 
 def clean(token_val):
     token_val = token_val.replace("\\$", "\$")
@@ -26,35 +32,23 @@ def clean_term(token_val):
     token_val = token_val.replace("\\\&", "\&")
     return clean(token_val)
 
-def find_row(input, token):
-    line_start = input.rfind('\n', 0, token.lexpos) + 1
-    return (token.lexpos - line_start) + 1
-
-
 def t_START(t):
     r"start\ =\ \$([^$\$]*?(\$[^$]{1})*)*\$;"
     t.value = clean(t.value[9:-2])
     return t
 
 
-def t_NON_TERMINAL(t):
+def t_NTERM(t):
     r'\$[^\\$]*((\\\$)?[^\\$]*)*\$'
     t.value = clean_non_term(t.value[1:-1])
     return t
 
 
-def t_TERMINAL(t):
+def t_TERM(t):
     r'\&[^\\&]*((\\\&)?[^\\&]*)*\&'
     t.value = clean_term(t.value[1:-1])
     return t
 
-
-t_EQUIV = r'='
-t_EPS = r'@'
-t_NEXT_TERM = r'\|'
-t_END_OF_LINE = r';'
-
-t_ignore = ' \t'
 
 
 def t_newline(t):
@@ -83,7 +77,6 @@ def main():
             tokens = lexer.token()
             if not tokens:
                 break
-            tokens.lexpos = find_row(lexer_input, tokens)
             print(tokens, file=fileout)
 
 
